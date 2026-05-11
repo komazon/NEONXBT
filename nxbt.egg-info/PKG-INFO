@@ -1,3 +1,35 @@
+Metadata-Version: 2.4
+Name: nxbt
+Version: 0.1.4
+Summary: Control your Nintendo Switch through a website, terminal, or macro.
+Author: Reece Walsh
+Author-email: reece@brikwerk.com
+License: MIT
+Project-URL: Code, https://github.com/komazon/neo_nxbt
+Project-URL: Issue tracker, https://github.com/komazon/neo_nxbt/issues
+Platform: any
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Requires-Python: >=3.6
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: dbus-python==1.2.16
+Requires-Dist: fastapi>=0.104.0
+Requires-Dist: python-socketio>=5.9.0
+Requires-Dist: uvicorn[standard]>=0.24.0
+Requires-Dist: blessed==1.17.10
+Requires-Dist: pynput==1.7.1
+Requires-Dist: psutil==5.6.6
+Requires-Dist: cryptography>=41.0.0
+Dynamic: description-content-type
+Dynamic: license-file
+Dynamic: requires-dist
+
 <h1 align="center">
   <br>
   <img src="https://raw.githubusercontent.com/Brikwerk/nxbt/master/docs/img/nxbt-logo.png" alt="NXBT" width="200">
