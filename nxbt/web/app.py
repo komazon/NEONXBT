@@ -1,130 +1,159 @@
+from __future__ import annotations
+
 import json
 import os
 from threading import RLock
 import time
 from socket import gethostname
+from pathlib import Path
+
+from fastapi import FastAPI, WebSocketDisconnect
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+import socketio
+import uvicorn
 
 from .cert import generate_cert
 from ..nxbt import Nxbt, PRO_CONTROLLER
-from flask import Flask, render_template, request
-from flask_socketio import SocketIO, emit
-import eventlet
 
+# Create FastAPI app
+app: FastAPI = FastAPI()
 
-app = Flask(__name__,
-            static_url_path='',
-            static_folder='static',)
-nxbt = Nxbt()
+# Setup CORS and static files
+static_dir = Path(__file__).parent / "static"
+templates_dir = Path(__file__).parent / "templates"
+
+# Mount static files
+app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
+
+# Initialize Nxbt
+nxbt: Nxbt = Nxbt()
 
 # Configuring/retrieving secret key
-secrets_path = os.path.join(
-    os.path.dirname(__file__), "secrets.txt"
-)
-if not os.path.isfile(secrets_path):
+secrets_path = Path(__file__).parent / "secrets.txt"
+if not secrets_path.exists():
     secret_key = os.urandom(24).hex()
-    with open(secrets_path, "w") as f:
-        f.write(secret_key)
+    secrets_path.write_text(secret_key)
 else:
-    secret_key = None
-    with open(secrets_path, "r") as f:
-        secret_key = f.read()
-app.config['SECRET_KEY'] = secret_key
+    secret_key = secrets_path.read_text()
 
-# Starting socket server with Flask app
-sio = SocketIO(app, cookie=False)
+# Setup SocketIO server
+sio: socketio.AsyncServer = socketio.AsyncServer(
+    async_mode="asgi",
+    cors_allowed_origins="*"
+)
 
-user_info_lock = RLock()
-USER_INFO = {}
+# Wrap FastAPI app with SocketIO
+asgi_app = socketio.ASGIApp(sio, app)
 
-
-@app.route('/')
-def index():
-    return render_template('index.html')
+user_info_lock: RLock = RLock()
+USER_INFO: dict = {}
 
 
-@sio.on('connect')
-def on_connect():
+@app.get("/")
+async def index() -> FileResponse:
+    """Serve the index.html template."""
+    index_path = templates_dir / "index.html"
+    return FileResponse(index_path)
+
+
+@sio.event
+async def connect(sid: str, environ: dict) -> None:
+    """Handle client connection."""
     with user_info_lock:
-        USER_INFO[request.sid] = {}
+        USER_INFO[sid] = {}
 
 
-@sio.on('state')
-def on_state():
+@sio.event
+async def state(sid: str) -> None:
+    """Send current state to client."""
     state_proxy = nxbt.state.copy()
-    state = {}
-    for controller in state_proxy.keys():
-        state[controller] = state_proxy[controller].copy()
-    emit('state', state)
+    state_data = {
+        controller: state_proxy[controller].copy()
+        for controller in state_proxy.keys()
+    }
+    await sio.emit("state", state_data, to=sid)
 
 
-@sio.on('disconnect')
-def on_disconnect():
+@sio.event
+async def disconnect(sid: str) -> None:
+    """Handle client disconnection."""
     print("Disconnected")
     with user_info_lock:
         try:
-            index = USER_INFO[request.sid]["controller_index"]
+            index = USER_INFO[sid]["controller_index"]
             nxbt.remove_controller(index)
         except KeyError:
             pass
+        finally:
+            USER_INFO.pop(sid, None)
 
 
-@sio.on('shutdown')
-def on_shutdown(index):
+@sio.event
+async def shutdown(sid: str, index: int) -> None:
+    """Shutdown a controller."""
     nxbt.remove_controller(index)
 
 
-@sio.on('web_create_pro_controller')
-def on_create_controller():
+@sio.event
+async def web_create_pro_controller(sid: str) -> None:
+    """Create a new Pro Controller."""
     print("Create Controller")
 
     try:
         reconnect_addresses = nxbt.get_switch_addresses()
-        index = nxbt.create_controller(PRO_CONTROLLER, reconnect_address=reconnect_addresses)
+        index = nxbt.create_controller(
+            PRO_CONTROLLER,
+            reconnect_address=reconnect_addresses
+        )
 
         with user_info_lock:
-            USER_INFO[request.sid]["controller_index"] = index
+            USER_INFO[sid]["controller_index"] = index
 
-        emit('create_pro_controller', index)
+        await sio.emit("create_pro_controller", index, to=sid)
     except Exception as e:
-        emit('error', str(e))
+        await sio.emit("error", str(e), to=sid)
 
 
-@sio.on('input')
-def handle_input(message):
-    # print("Webapp Input", time.perf_counter())
-    message = json.loads(message)
-    index = message[0]
-    input_packet = message[1]
+@sio.event
+async def input(sid: str, message: str) -> None:
+    """Handle controller input."""
+    data = json.loads(message)
+    index = data[0]
+    input_packet = data[1]
     nxbt.set_controller_input(index, input_packet)
 
 
-@sio.on('macro')
-def handle_macro(message):
-    message = json.loads(message)
-    index = message[0]
-    macro = message[1]
-    nxbt.macro(index, macro)
+@sio.event
+async def macro(sid: str, message: str) -> None:
+    """Handle macro execution."""
+    data = json.loads(message)
+    index = data[0]
+    macro_name = data[1]
+    nxbt.macro(index, macro_name)
 
 
-def start_web_app(ip='0.0.0.0', port=8000, usessl=False, cert_path=None):
+async def start_web_app(
+    ip: str = "0.0.0.0",
+    port: int = 8000,
+    usessl: bool = False,
+    cert_path: str | None = None
+) -> None:
+    """Start the FastAPI web server."""
+    ssl_keyfile: str | None = None
+    ssl_certfile: str | None = None
+
     if usessl:
         if cert_path is None:
             # Store certs in the package directory
-            cert_path = os.path.join(
-                os.path.dirname(__file__), "cert.pem"
-            )
-            key_path = os.path.join(
-                os.path.dirname(__file__), "key.pem"
-            )
+            cert_file = Path(__file__).parent / "cert.pem"
+            key_file = Path(__file__).parent / "key.pem"
         else:
             # If specified, store certs at the user's preferred location
-            cert_path = os.path.join(
-                cert_path, "cert.pem"
-            )
-            key_path = os.path.join(
-                cert_path, "key.pem"
-            )
-        if not os.path.isfile(cert_path) or not os.path.isfile(key_path):
+            cert_file = Path(cert_path) / "cert.pem"
+            key_file = Path(cert_path) / "key.pem"
+
+        if not cert_file.exists() or not key_file.exists():
             print(
                 "\n"
                 "-----------------------------------------\n"
@@ -146,16 +175,24 @@ def start_web_app(ip='0.0.0.0', port=8000, usessl=False, cert_path=None):
             )
             print("Generating certificates...")
             cert, key = generate_cert(gethostname())
-            with open(cert_path, "wb") as f:
-                f.write(cert)
-            with open(key_path, "wb") as f:
-                f.write(key)
+            cert_file.write_bytes(cert)
+            key_file.write_bytes(key)
 
-        eventlet.wsgi.server(eventlet.wrap_ssl(eventlet.listen((ip, port)),
-            certfile=cert_path, keyfile=key_path), app)
-    else:
-        eventlet.wsgi.server(eventlet.listen((ip, port)), app)
+        ssl_certfile = str(cert_file)
+        ssl_keyfile = str(key_file)
+
+    config = uvicorn.Config(
+        asgi_app,
+        host=ip,
+        port=port,
+        ssl_keyfile=ssl_keyfile,
+        ssl_certfile=ssl_certfile,
+        log_level="info"
+    )
+    server = uvicorn.Server(config)
+    await server.serve()
 
 
 if __name__ == "__main__":
-    start_web_app()
+    import asyncio
+    asyncio.run(start_web_app())
