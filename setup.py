@@ -14,7 +14,7 @@ setup(
         "psutil==5.6.6",
         "cryptography>=41.0.0",
     ],
-    extra_require={
+    extras_require={
         "dev": [
             "pytest"
         ]
