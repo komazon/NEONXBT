@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from .controller import ControllerServer
 from .controller import ControllerProtocol
 from .controller import SwitchReportParser

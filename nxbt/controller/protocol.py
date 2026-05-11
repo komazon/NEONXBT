@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from enum import Enum
 import random
 from time import perf_counter

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from multiprocessing import Process, Lock, Queue, Manager
 import queue
 from enum import Enum

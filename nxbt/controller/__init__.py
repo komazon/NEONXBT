@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from .server import ControllerServer
 from .controller import ControllerTypes
 from .controller import Controller

@@ -1,4 +1,7 @@
-def replace_subarray(arr, start, num_elms, value=0, replace_arr=None):
+from __future__ import annotations
+
+
+def replace_subarray(arr: list, start: int, num_elms: int, value: int = 0, replace_arr: list | None = None) -> None:
     """Replaces a subsection within an array with another
     set of values.
 
@@ -22,7 +25,7 @@ def replace_subarray(arr, start, num_elms, value=0, replace_arr=None):
         arr[start:start + num_elms] = [value] * num_elms
 
 
-def format_message(data, split, name):
+def format_message(data: bytes, split: int, name: str) -> str:
     """Formats a given byte message in hex format split
     into payload and subcommand sections.
 
@@ -55,7 +58,7 @@ def format_message(data, split, name):
     return formatted
 
 
-def format_msg_controller(data):
+def format_msg_controller(data: bytes) -> str:
     """Prints a formatted message from a controller
 
     :param data: The bytes from the controller message
@@ -65,7 +68,7 @@ def format_msg_controller(data):
     return format_message(data, 13, "Controller")
 
 
-def format_msg_switch(data):
+def format_msg_switch(data: bytes) -> str:
     """Prints a formatted message from a Switch
 
     :param data: The bytes from the Switch message
