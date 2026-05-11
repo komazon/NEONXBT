@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import asyncio
 from random import randint
 from time import sleep
 import os
@@ -321,8 +322,8 @@ def main():
 
     if args.command == 'webapp':
         from .web import start_web_app
-        start_web_app(ip=args.ip, port=args.port,
-            usessl=args.usessl, cert_path=args.certpath)
+        asyncio.run(start_web_app(ip=args.ip, port=args.port,
+            usessl=args.usessl, cert_path=args.certpath))
     elif args.command == 'demo':
         demo()
     elif args.command == 'macro':
