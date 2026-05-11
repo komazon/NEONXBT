@@ -2,8 +2,8 @@
 <html>
     <head>
         <title>NXBT Webapp</title>
-        <link rel="icon" type="image/png" href="favicon.png"/>
-        <link rel="stylesheet" type="text/css" href="css/main.css">
+        <link rel="icon" type="image/png" href="/static/favicon.png"/>
+        <link rel="stylesheet" type="text/css" href="/static/css/main.css">
 
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
     </head>
@@ -25,19 +25,19 @@
                 <h1>Create a Controller</h1>
                 <div class="hidden surface controller-option" onclick="createJoyConL()">
                     <div class="controller-option-img-wrapper">
-                        <img src="joyconl.svg" draggable="false">
+                        <img src="/static/joyconl.svg" draggable="false">
                     </div>
                     Joy-Con (L)
                 </div>
                 <div class="surface controller-option" onclick="createProController()">
                     <div class="controller-option-img-wrapper">
-                        <img src="procon.svg" draggable="false">
+                        <img src="/static/procon.svg" draggable="false">
                     </div>
                     Pro Controller
                 </div>
                 <div class="hidden surface controller-option" onclick="createJoyConR()">
                     <div class="controller-option-img-wrapper">
-                        <img src="joyconr.svg" draggable="false">
+                        <img src="/static/joyconr.svg" draggable="false">
                     </div>
                     Joy-Con (R)
                 </div>
@@ -74,14 +74,14 @@
                 <div id="controller-underlay-container">
                     <div class="controller-display hidden">
                         <div class="control-indicator" id="jl_"></div>
-                        <img id="joyconl-underlay" class="hidden controller-underlay" src="joyconl.svg" draggable="false">
+                        <img id="joyconl-underlay" class="hidden controller-underlay" src="/static/joyconl.svg" draggable="false">
                     </div>
                     <div class="controller-display hidden">
                         <div class="control-indicator" id="jr_"></div>
-                        <img id="joyconr-underlay" class="hidden controller-underlay" src="joyconr.svg" draggable="false">
+                        <img id="joyconr-underlay" class="hidden controller-underlay" src="/static/joyconr.svg" draggable="false">
                     </div>
                     <div class="controller-display">
-                        <img id="procon-underlay" class="controller-underlay" src="procon-transparent.svg" draggable="false">
+                        <img id="procon-underlay" class="controller-underlay" src="/static/procon-transparent.svg" draggable="false">
                         <div class="control-indicator" id="pc_ls"></div>
                         <div class="control-indicator" id="pc_rs"></div>
 
@@ -222,7 +222,7 @@
             </footer>
         </main>
 
-        <script src="js/socket.io.js"></script>
-        <script src="js/main.js"></script>
+        <script src="/static/js/socket.io.js"></script>
+        <script src="/static/js/main.js"></script>
     </body>
 </html>
