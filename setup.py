@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(
-    name="n2nxbt",
+    name="n2xbt",
     include_package_data=True,
     long_description_content_type="text/markdown",
     install_requires=[
@@ -13,6 +13,7 @@ setup(
         "pynput==1.7.1",
         "psutil==5.6.6",
         "cryptography>=41.0.0",
+        
     ],
     extras_require={
         "dev": [
