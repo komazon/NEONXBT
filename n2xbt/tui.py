@@ -8,7 +8,7 @@ import multiprocessing
 
 from blessed import Terminal
 
-from .nxbt import Nxbt, PRO_CONTROLLER
+from .n2xbt import N2xbt, PRO_CONTROLLER
 
 
 class LoadingSpinner():

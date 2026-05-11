@@ -7,7 +7,7 @@ from time import sleep
 import os
 import traceback
 
-from .nxbt import Nxbt, PRO_CONTROLLER
+from .n2xbt import N2xbt, PRO_CONTROLLER
 from .bluez import find_devices_by_alias
 from .tui import InputTUI
 
@@ -151,7 +151,7 @@ def demo():
     is used to run a macro.
     """
 
-    nx = Nxbt(debug=args.debug, log_to_file=args.logfile)
+    nx = N2xbt(debug=args.debug, log_to_file=args.logfile)
     adapters = nx.get_available_adapters()
     if len(adapters) < 1:
         raise OSError("Unable to detect any Bluetooth adapters.")
@@ -185,7 +185,7 @@ def test():
     print("[1] Attempting to initialize NXBT...")
     nx = None
     try:
-        nx = Nxbt(debug=args.debug, log_to_file=args.logfile)
+        nx = N2xbt(debug=args.debug, log_to_file=args.logfile)
     except Exception as e:
         print("Failed to initialize:")
         print(traceback.format_exc())
@@ -277,7 +277,7 @@ def macro():
 
     reconnect_target = get_reconnect_target()
 
-    nx = Nxbt(debug=args.debug, log_to_file=args.logfile)
+    nx = N2xbt(debug=args.debug, log_to_file=args.logfile)
     print("Creating controller...")
     index = nx.create_controller(
         PRO_CONTROLLER,

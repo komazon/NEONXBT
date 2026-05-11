@@ -14,7 +14,7 @@ import socketio
 import uvicorn
 
 from .cert import generate_cert
-from ..nxbt import Nxbt, PRO_CONTROLLER
+from ..n2xbt import N2xbt, PRO_CONTROLLER
 
 # Create FastAPI app
 app: FastAPI = FastAPI()
@@ -27,7 +27,7 @@ templates_dir = Path(__file__).parent / "templates"
 app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
 # Initialize Nxbt
-nxbt: Nxbt = Nxbt()
+nxbt: N2xbt = N2xbt()
 
 # Configuring/retrieving secret key
 secrets_path = Path(__file__).parent / "secrets.txt"
